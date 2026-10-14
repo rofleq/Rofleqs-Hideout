@@ -1700,14 +1700,8 @@ function createFavoriteCard(originalCard) {
 
     const isRotetra = gameId === "rotetra";
 
-    const isBiryado = gameId === "biryado";
-
     const gameUrl = isRotetra
         ? "https://html.itch.zone/html/19544637/index.html?v=1791059576"
-        : clone.dataset.gameUrl;
-
-    const gameUrl = isBiryado
-        ? "https://html-classic.itch.zone/html/19507278/Biryado_v54.4_wbe/index.html?v=1790879199"
         : clone.dataset.gameUrl;
 
     // Keep the correct URL on the favorite card.
