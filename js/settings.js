@@ -1692,75 +1692,85 @@ function updateFavoriteCount() {
 }
 
 
-function createFavoriteCard(
-    originalCard
-) {
 
-    const clone =
-        originalCard.cloneNode(
-            true
-        );
+function createFavoriteCard(originalCard) {
+    const clone = originalCard.cloneNode(true);
 
+    const gameId = clone.dataset.gameId;
 
-    clone.onclick =
-        () => {
+    const isRotetra = gameId === "rotetra";
 
-            launchGame(
-                clone.dataset.gameUrl
+    const gameUrl = isRotetra
+        ? "https://html.itch.zone/html/19544637/index.html?v=1791059576"
+        : clone.dataset.gameUrl;
+
+    // Keep the correct URL on the favorite card.
+    clone.dataset.gameUrl = gameUrl;
+
+    // Clicking the card.
+    clone.onclick = (event) => {
+        if (
+            event.target.closest(".favorite-button") ||
+            event.target.closest("a")
+        ) {
+            return;
+        }
+
+        if (isRotetra) {
+            window.open(
+                gameUrl,
+                "_blank",
+                "noopener,noreferrer"
             );
+        } else {
+            launchGame(gameUrl);
+        }
+    };
 
-        };
-
-
-    const favoriteButton =
-        clone.querySelector(
-            ".favorite-button"
-        );
-
+    // Favorite button.
+    const favoriteButton = clone.querySelector(".favorite-button");
 
     if (favoriteButton) {
+        favoriteButton.onclick = (event) => {
+            event.preventDefault();
+            event.stopPropagation();
 
-        favoriteButton.onclick =
-            event => {
-
-                event.stopPropagation();
-
-
-                toggleFavorite(
-                    clone.dataset.gameId
-                );
-
-            };
-
+            toggleFavorite(gameId);
+        };
     }
 
-
-    const playButton =
-        clone.querySelector(
-            ".play-small"
-        );
-
+    // Play button.
+    const playButton = clone.querySelector(".play-small");
 
     if (playButton) {
+        playButton.onclick = (event) => {
+            event.preventDefault();
+            event.stopPropagation();
 
-        playButton.onclick =
-            event => {
-
-                event.stopPropagation();
-
-
-                launchGame(
-                    clone.dataset.gameUrl
+            if (isRotetra) {
+                window.open(
+                    gameUrl,
+                    "_blank",
+                    "noopener,noreferrer"
                 );
-
-            };
-
+            } else {
+                launchGame(gameUrl);
+            }
+        };
     }
 
+    // Thumbnail link, if the card has one.
+    const imageLink = clone.querySelector(".game-image a");
+
+    if (imageLink && isRotetra) {
+        imageLink.href = gameUrl;
+        imageLink.target = "_blank";
+        imageLink.rel = "noopener noreferrer";
+    }
 
     return clone;
-
 }
+
 
 
 function renderFavorites() {
