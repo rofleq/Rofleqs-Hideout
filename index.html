@@ -2665,6 +2665,75 @@
 
                 </article>
                 
+                <!-- pizza tower -->
+                <article
+                    class="game-card"
+                    data-game-id="pizza"
+                    data-game-name="pizza"
+                    data-game-version=""
+                    data-game-url="games/pizza/index.html"
+                    onclick="launchGame('games/pizza/index.html')"
+                >
+
+                    <div class="game-image">
+
+                        <img
+                            src="assets/pizza"
+                            alt="pizza"
+                            class="minecraft-thumbnail"
+                        >
+
+
+                        <button
+                            type="button"
+                            class="favorite-button"
+                            aria-label="Add pizza tower knight to favorites"
+                            title="Add to favorites"
+                            onclick="
+                                event.stopPropagation();
+                                toggleFavorite(
+                                    'pizza'
+                                );
+                            "
+                        >
+                            ☆
+                        </button>
+
+
+                        <div class="red-accent"></div>
+
+                    </div>
+
+
+                    <div class="game-info">
+
+                        <div class="game-title">
+                            Pizza Tower
+                        </div>
+
+
+                        <div class="game-meta">
+                            
+                        </div>
+
+
+                        <button
+                            type="button"
+                            class="play-small"
+                            onclick="
+                                event.stopPropagation();
+                                launchGame(
+                                    'games/pizza/index.html'
+                                );
+                            "
+                        >
+                            ▶ PLAY
+                        </button>
+
+                    </div>
+
+                </article>
+                
             </div>
 
         </section>
