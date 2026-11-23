@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <base href="https://cdn.jsdelivr.net/gh/giorgirick2-gif/game-webports-onawebsite@main/pizza-tower/">
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+    <link rel="icon" type="image/png" href="https://cdn2.steamgriddb.com/icon/4532f03593699ffdfd5fc1b58540190e/32/512x512.png">
+    <title>Pizza Tower</title>
+    <link rel="stylesheet" href="index.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Inter', sans-serif;
+            text-align: center;
+        }
+
+        canvas {
+            height: 100%;
+            margin: auto;
+            padding: 0;
+            border: 0 none;
+            background-color: #000;
+            image-rendering: pixelated;
+            display: block;
+        }
+
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 48px;
+            z-index: 1000;
+            overflow: hidden;
+            transition: opacity 0.45s ease;
+        }
+
+        .bg-layer {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(10px) brightness(0.7);
+            transform: scale(1.08);
+        }
+
+        .center-logo {
+            position: absolute;
+            top: 32%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+            width: min(460px, 70vw);
+            height: auto;
+            pointer-events: none;
+            user-select: none;
+            filter:
+                drop-shadow(0 8px 24px rgba(0, 0, 0, 0.75))
+                drop-shadow(0 0 2px rgba(0, 0, 0, 0.9));
+        }
+
+        .logo-text-fallback {
+            position: absolute;
+            top: 32%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+            color: #ffd93b;
+            font-size: clamp(38px, 8vw, 88px);
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow:
+                0 0 24px rgba(255, 80, 40, 0.9),
+                0 4px 0 #b3151d,
+                0 8px 24px rgba(0, 0, 0, 0.9);
+            pointer-events: none;
+            user-select: none;
+            display: none;
+            line-height: 1;
+        }
+
+        #loading-screen.fade-out { opacity: 0; pointer-events: none; }
+        #loading-screen.hidden { display: none; }
+
+        .loading-content {
+            position: relative;
+            z-index: 2;
+            width: 90%;
+            max-width: 560px;
+            padding: 28px 30px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: rgba(16, 18, 26, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 24px;
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            box-shadow:
+                0 24px 60px rgba(0, 0, 0, 0.70),
+                0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+                0 2px 0 rgba(255, 255, 255, 0.05) inset;
+        }
+
+        .loading-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            gap: 12px;
+        }
+
+        .title-group { display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+        .mini-favicon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+            flex-shrink: 0;
+            object-fit: cover;
+        }
+
+        .loading-title {
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .loading-mb {
+            color: rgba(255,255,255,0.85);
+            font-size: 12.5px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+            background: rgba(255,255,255,0.06);
+            padding: 4px 12px;
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .loading-bar-container {
+            position: relative;
+            width: 100%;
+            height: 30px;
+            padding: 4px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #8f431a 0%, #d98738 19%, #f4c37d 42%, #a94e1d 69%, #67250f 100%);
+            box-shadow:
+                inset 0 2px 3px rgba(70, 22, 6, 0.72),
+                inset 0 -2px 3px rgba(255, 236, 190, 0.35),
+                0 0 0 2px #582009,
+                0 0 0 4px rgba(255, 204, 120, 0.18),
+                0 8px 22px rgba(0, 0, 0, 0.55);
+            overflow: hidden;
+        }
+
+        .loading-bar-container::before {
+            content: '';
+            position: absolute;
+            z-index: 2;
+            inset: 2px 4px auto;
+            height: 4px;
+            border-radius: 999px;
+            background: rgba(255, 237, 181, 0.48);
+            pointer-events: none;
+        }
+
+        .loading-bar {
+            position: relative;
+            width: 0%;
+            height: 100%;
+            min-width: 0;
+            border-radius: 999px;
+            background-color: #f8b51e;
+            background-image:
+                radial-gradient(ellipse at 8% 82%, rgba(190, 76, 11, 0.62) 0 1px, transparent 2.2px),
+                radial-gradient(ellipse at 27% 20%, rgba(190, 76, 11, 0.52) 0 1px, transparent 2px),
+                radial-gradient(ellipse at 54% 76%, rgba(190, 76, 11, 0.6) 0 1px, transparent 2px),
+                radial-gradient(ellipse at 82% 18%, rgba(190, 76, 11, 0.54) 0 1px, transparent 2px),
+                radial-gradient(circle at 15px 9px, #e84932 0 4px, #a71916 4.4px 5.4px, transparent 5.8px),
+                radial-gradient(circle at 42px 18px, #e84932 0 4px, #a71916 4.4px 5.4px, transparent 5.8px),
+                radial-gradient(circle at 69px 8px, #e84932 0 4px, #a71916 4.4px 5.4px, transparent 5.8px),
+                linear-gradient(180deg, #ffe68e 0%, #ffd13d 36%, #f5a313 72%, #d8760d 100%);
+            background-size:
+                82px 22px, 82px 22px, 82px 22px, 82px 22px,
+                82px 22px, 82px 22px, 82px 22px,
+                100% 100%;
+            background-repeat: repeat-x, repeat-x, repeat-x, repeat-x, repeat-x, repeat-x, repeat-x, no-repeat;
+            background-position: 0 0, 10px 0, 25px 0, 44px 0, 0 0, 0 0, 0 0, 0 0;
+            transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow:
+                inset 0 2px 2px rgba(255, 255, 255, 0.58),
+                inset 0 -3px 4px rgba(142, 50, 5, 0.34),
+                2px 0 4px rgba(91, 28, 5, 0.38);
+            overflow: hidden;
+        }
+
+        .loading-bar::before {
+            content: '';
+            position: absolute;
+            inset: 3px 8px auto;
+            height: 4px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.58), rgba(255,255,255,0.06));
+            opacity: 0.8;
+        }
+
+        .loading-bar::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 999px;
+            background: linear-gradient(105deg, transparent 28%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0.52) 50%, rgba(255,255,255,0.1) 60%, transparent 72%);
+            transform: translateX(-120%);
+            animation: cheese-shimmer 2.4s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes cheese-shimmer {
+            0%, 28% { transform: translateX(-120%); }
+            72%, 100% { transform: translateX(120%); }
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-top: 2px;
+        }
+
+        .loading-text {
+            font-size: 13px;
+            color: rgba(255,255,255,0.9);
+            font-weight: 500;
+            letter-spacing: 0.2px;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+            height: 1.2em;
+        }
+
+        .loading-percent {
+            font-size: 14px;
+            font-weight: 800;
+            color: #ffd27a;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 0 12px rgba(255,180,60,0.6), 0 2px 6px rgba(0,0,0,0.9);
+            background: rgba(255, 180, 60, 0.12);
+            padding: 4px 12px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 180, 60, 0.28);
+            line-height: 1;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 2px;
+        }
+
+        .dot {
+            width: 5px;
+            height: 5px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 50%;
+            animation: dot-pulse 1.4s infinite ease-in-out;
+            box-shadow: 0 0 8px rgba(255,180,60,0.6), 0 0 2px rgba(0,0,0,0.9);
+        }
+
+        .dot:nth-child(2) { animation-delay: 0.18s; }
+        .dot:nth-child(3) { animation-delay: 0.36s; }
+
+        @keyframes dot-pulse {
+            0%, 100% { opacity: 0.25; transform: scale(0.75); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .loading { display: none !important; }
+    </style>
+</head>
+
+<body>
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+
+    <div id="pauseMenuContainer" hidden>
+        <div id="pauseMenuBorder">
+            <div id="pauseMenu">
+                <button id="resumeButton" onclick="resume()"> Resume </button>
+                <button id="quitButton" onclick="quitIfSupported()"> Quit </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading">
+        <div class="spinner" id="spinner"></div>
+        <div class="emscripten" id="status">Downloading...</div>
+        <progress value="0" max="100" id="progress" hidden="1"></progress>
+    </div>
+
+    <div id="loading-screen">
+        <div class="bg-layer" id="bg"></div>
+
+        <img class="center-logo" id="center-logo"
+             src="https://i.postimg.cc/RFPV66BY/pizza-tower-logo.png"
+             onerror="handleLogoError(this);"
+             alt="Pizza Tower">
+
+        <div class="logo-text-fallback" id="logo-text-fallback">PIZZA TOWER</div>
+
+        <div class="loading-content">
+            <div class="loading-header">
+                <div class="title-group">
+                    <img src="https://cdn2.steamgriddb.com/icon/4532f03593699ffdfd5fc1b58540190e/32/512x512.png" class="mini-favicon" alt="icon">
+                    <div class="loading-title">Pizza Tower</div>
+                </div>
+                <div class="loading-mb" id="mb-text">0.0 / 300.0 MB</div>
+            </div>
+
+            <div class="loading-bar-container">
+                <div class="loading-bar" id="loading-bar"></div>
+            </div>
+
+            <div class="status-row">
+                <div class="loading-text" id="loading-text">Initializing…</div>
+                <div class="loading-percent" id="loading-percent">0%</div>
+            </div>
+
+            <div class="loading-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="output-container" id="output-container">
+        <div id="message-container">
+            <div id="messages"></div>
+        </div>
+    </div>
+
+    <script>
+         window.handleLogoError = (function () {
+            var stage = 0;
+            return function (img) {
+                stage++;
+                if (stage === 1) {
+                    img.src = "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2231450/header.jpg?t=1732516978";
+                } else {
+                    img.style.display = 'none';
+                    document.getElementById('logo-text-fallback').style.display = 'block';
+                }
+            };
+        })();
+
+        setTimeout(function () {
+            var img = document.getElementById('center-logo');
+            if (img && (!img.complete || img.naturalWidth === 0)) {
+                img.style.display = 'none';
+                document.getElementById('logo-text-fallback').style.display = 'block';
+            }
+        }, 4000);
+    </script>
+
+    <script>
+        (function () {
+            var BACKGROUNDS = [
+                "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2231450/capsule_616x353.jpg?t=1732516978",
+                "https://wallpapers.com/images/featured/pizza-tower-c1jyf37k49u9e0z0.jpg",
+                "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/5547f07d-3969-45bc-9290-31b57c6ae95c/dgzlunx-87d7c880-ebb3-483b-ba74-70b944a386fe.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi81NTQ3ZjA3ZC0zOTY5LTQ1YmMtOTI5MC0zMWI1N2M2YWU5NWMvZGd6bHVueC04N2Q3Yzg4MC1lYmIzLTQ4M2ItYmE3NC03MGI5NDRhMzg2ZmUucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.hiFWDMLZWZU2ywgGDVsleJzb1ICj2HasTkDUT6m6O1E"
+            ];
+
+            function pickBackground() {
+                var last = sessionStorage.getItem('lastPizzaBg');
+                var index;
+                do {
+                    index = Math.floor(Math.random() * BACKGROUNDS.length);
+                } while (BACKGROUNDS.length > 1 && String(index) === last);
+                sessionStorage.setItem('lastPizzaBg', String(index));
+                return BACKGROUNDS[index];
+            }
+
+            document.getElementById('bg').style.backgroundImage =
+                'url("' + pickBackground() + '")';
+
+            var loadingBar = document.getElementById('loading-bar');
+            var loadingText = document.getElementById('loading-text');
+            var loadingPercent = document.getElementById('loading-percent');
+            var mbText = document.getElementById('mb-text');
+            var loadingScreen = document.getElementById('loading-screen');
+            var totalSizeMB = 300.0;
+            var lastPercent = 0;
+            var finished = false;
+
+            function setProgress(percent, currentPart, totalParts) {
+                percent = Math.max(0, Math.min(100, percent));
+                if (percent < lastPercent) percent = lastPercent;
+                lastPercent = percent;
+
+                loadingBar.style.width = percent + '%';
+                loadingPercent.textContent = Math.round(percent) + '%';
+
+                var currentMB = (percent / 100 * totalSizeMB).toFixed(1);
+                mbText.textContent = currentMB + ' / ' + totalSizeMB.toFixed(1) + ' MB';
+
+                if (currentPart && totalParts) {
+                    loadingText.textContent =
+                        "Downloading game data… (" + currentPart + "/" + totalParts + ")";
+                }
+            }
+
+            function setText(text) {
+                loadingText.textContent = text;
+            }
+
+            function finish() {
+                if (finished) return;
+                finished = true;
+                loadingBar.style.width = '100%';
+                loadingPercent.textContent = '100%';
+                mbText.textContent = totalSizeMB.toFixed(1) + ' / ' + totalSizeMB.toFixed(1) + ' MB';
+                setText('Ready!');
+                setTimeout(function () {
+                    loadingScreen.classList.add('fade-out');
+                    setTimeout(function () {
+                        loadingScreen.classList.add('hidden');
+                    }, 500);
+                }, 700);
+            }
+
+            window.__pizzaLoading = {
+                setProgress: setProgress,
+                setText: setText,
+                finish: finish
+            };
+        })();
+    </script>
+
+    <script>
+        (function () {
+            var TOTAL_PARTS = 13;
+            var partsData = new Array(TOTAL_PARTS);
+            var downloadedParts = 0;
+            var currentPartFraction = 0;
+
+            function updateUI() {
+                var overall = ((downloadedParts + currentPartFraction) / TOTAL_PARTS) * 100;
+                if (overall > 99) overall = 99;
+                var displayPart = Math.min(downloadedParts + 1, TOTAL_PARTS);
+                window.__pizzaLoading.setProgress(overall, displayPart, TOTAL_PARTS);
+            }
+
+            function fetchWithProgress(url, onProgress) {
+                return fetch(url).then(function (response) {
+                    if (!response.ok) throw new Error("HTTP " + response.status);
+                    var contentLength = response.headers.get('content-length');
+                    var total = contentLength ? parseInt(contentLength, 10) : 0;
+                    var reader = response.body.getReader();
+                    var chunks = [];
+                    var received = 0;
+
+                    function read() {
+                        return reader.read().then(function (result) {
+                            if (result.done) {
+                                return new Blob(chunks).arrayBuffer();
+                            }
+                            chunks.push(result.value);
+                            received += result.value.length;
+                            if (total && onProgress) onProgress(received / total);
+                            return read();
+                        });
+                    }
+                    return read();
+                });
+            }
+
+            function loadPart(index) {
+                if (index >= TOTAL_PARTS) {
+                    var mergedBlob = new Blob(partsData);
+                    window.gameUnxUrl = URL.createObjectURL(mergedBlob);
+                    window.__pizzaLoading.setText("Starting game…");
+                    installHooksAndStart();
+                    return;
+                }
+
+                fetchWithProgress("game.unx.part" + (index + 1), function (partFraction) {
+                    currentPartFraction = partFraction;
+                    updateUI();
+                }).then(function (arrayBuffer) {
+                    partsData[index] = arrayBuffer;
+                    downloadedParts++;
+                    currentPartFraction = 0;
+                    updateUI();
+                    loadPart(index + 1);
+                }).catch(function (err) {
+                    console.error("Failed to download part " + (index + 1) + ":", err);
+                    window.__pizzaLoading.setText("Download failed. Retrying part " + (index + 1) + "…");
+                    setTimeout(function () { loadPart(index); }, 1500);
+                });
+            }
+
+            function installHooksAndStart() {
+                var originalFetch = window.fetch;
+                window.fetch = async function (...args) {
+                    var url = args[0];
+                    var options = args[1];
+                    if (typeof url === 'string' && url.includes("game.unx")) {
+                        url = window.gameUnxUrl;
+                    } else if (url instanceof Request && url.url.includes("game.unx")) {
+                        url = new Request(window.gameUnxUrl, url);
+                    }
+                    return originalFetch.call(this, url, options);
+                };
+
+                var originalOpen = XMLHttpRequest.prototype.open;
+                XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+                    if (typeof url === 'string' && url.includes("game.unx")) {
+                        url = window.gameUnxUrl;
+                    }
+                    return originalOpen.call(this, method, url, ...rest);
+                };
+
+                var indexScript = document.createElement("script");
+                indexScript.src = "index.js";
+                document.body.appendChild(indexScript);
+
+                var runnerScript = document.createElement("script");
+                runnerScript.src = "runner.js";
+                document.body.appendChild(runnerScript);
+
+                detectGameReady();
+            }
+
+            function detectGameReady() {
+                var done = false;
+                function markReady() {
+                    if (done) return;
+                    done = true;
+                    window.__pizzaLoading.finish();
+                }
+
+                var statusEl = document.getElementById('status');
+                if (statusEl) {
+                    var observer = new MutationObserver(function () {
+                        var t = (statusEl.textContent || "").toLowerCase();
+                        if (t.indexOf('running') !== -1 || t.indexOf('ready') !== -1) {
+                            markReady();
+                        }
+                    });
+                    observer.observe(statusEl, { childList: true, characterData: true, subtree: true });
+                }
+
+                var readyCheck = setInterval(function () {
+                    if (window.Module && window.Module.calledRun) {
+                        clearInterval(readyCheck);
+                        markReady();
+                    }
+                }, 300);
+
+                var canvasCheck = setInterval(function () {
+                    var c = document.getElementById('canvas');
+                    if (c && (c.width > 0 && c.height > 0) && c.getContext) {
+                        try {
+                            var gl = c.getContext('webgl') || c.getContext('webgl2') || c.getContext('2d');
+                            if (gl) {
+                                clearInterval(canvasCheck);
+                                setTimeout(markReady, 1500);
+                            }
+                        } catch (e) {}
+                    }
+                }, 400);
+
+                setTimeout(function () {
+                    clearInterval(readyCheck);
+                    clearInterval(canvasCheck);
+                    markReady();
+                }, 25000);
+            }
+
+            updateUI();
+            loadPart(0);
+        })();
+    </script>
+
+    <script>
+        (function () {
+            var DESIRED_TITLE = "Pizza Tower";
+            var titleEl = document.querySelector('title');
+            if (titleEl && titleEl.textContent !== DESIRED_TITLE) {
+                titleEl.textContent = DESIRED_TITLE;
+            }
+            var observer = new MutationObserver(function () {
+                if (document.title !== DESIRED_TITLE) document.title = DESIRED_TITLE;
+            });
+            observer.observe(titleEl, { childList: true, characterData: true, subtree: true });
+            var headObserver = new MutationObserver(function () {
+                if (document.title !== DESIRED_TITLE) document.title = DESIRED_TITLE;
+            });
+            headObserver.observe(document.head, { childList: true, subtree: true });
+        })();
+    </script>
+</body>
+
+</html>
